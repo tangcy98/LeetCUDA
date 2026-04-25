@@ -1,116 +1,121 @@
-# PROJECT KNOWLEDGE BASE
+# 项目知识库
 
-**Generated:** 2026-04-25
-**Commit:** 067f25e
-**Branch:** main
+**生成时间：** 2026-04-25
+**Commit：** 067f25e
+**分支：** main
 
-## OVERVIEW
+## 概览
 
-LeetCUDA: 200+ CUDA kernel implementations (Easy→Hard++) with PyTorch bindings, plus two standalone libraries — HGEMM (98-100% cuBLAS perf) and FFPA-Attention (1.8-3x faster than SDPA for large headdim). Educational repo organized by topic with progressive optimization from naive CUDA cores to Tensor Cores (WMMA→MMA→WGMMA→CuTe).
+LeetCUDA 是一个面向学习的 CUDA kernel 仓库，包含 200+ 个带 PyTorch 绑定的 CUDA kernel 实现，并附带两个独立库：HGEMM（达到 cuBLAS 98-100% 性能）和 FFPA-Attention（大 head dimension 场景下比 SDPA 快 1.8-3 倍）。项目按主题组织，难度从朴素 CUDA Core kernel 逐步推进到 Tensor Core（WMMA → MMA → WGMMA → CuTe）。
 
-## STRUCTURE
+## 目录结构
 
 ```
 LeetCUDA/
-├── kernels/           # 30 topic dirs, each: X.cu + X.py + README.md
-│   ├── elementwise/   # ⭐ Easy — activation/element-wise ops
-│   ├── reduce/        # ⭐⭐ Medium — warp/block reductions
-│   ├── sgemm/         # ⭐⭐⭐ Hard — FP32 GEMM
-│   ├── hgemm/         # ⭐⭐⭐ Hard — FP16 GEMM (→AGENTS.md)
-│   ├── flash-attn/    # ⭐⭐⭐⭐ Hard+ — FA2 MMA (→AGENTS.md)
-│   ├── openai-triton/ # Triton kernel implementations
-│   ├── swizzle/       # SMEM swizzle pattern examples
-│   └── ws-hgemm/      # Warp-specialized HGEMM (Hopper)
-├── ffpa-attn/         # Standalone FFPA library (→AGENTS.md)
-├── HGEMM/             # Standalone HGEMM repo (mirrors kernels/hgemm)
-├── third-party/       # CUTLASS submodule — DO NOT modify
-├── others/            # TensorRT/PyTorch distributed examples
-├── docs/              # Documentation assets
-└── slides/            # Presentation materials
+├── kernels/           # 30 个主题目录，每个目录通常包含 X.cu + X.py + README.md
+│   ├── elementwise/   # ⭐ Easy：激活函数/逐元素算子
+│   ├── reduce/        # ⭐⭐ Medium：warp/block reduction
+│   ├── sgemm/         # ⭐⭐⭐ Hard：FP32 GEMM
+│   ├── hgemm/         # ⭐⭐⭐ Hard：FP16 GEMM（见 AGENTS.md）
+│   ├── flash-attn/    # ⭐⭐⭐⭐ Hard+：FA2 MMA（见 AGENTS.md）
+│   ├── openai-triton/ # Triton kernel 实现
+│   ├── swizzle/       # SMEM swizzle 模式示例
+│   └── ws-hgemm/      # Warp-specialized HGEMM（Hopper）
+├── ffpa-attn/         # 独立 FFPA 库（见 AGENTS.md）
+├── HGEMM/             # 独立 HGEMM 仓库副本（与 kernels/hgemm 对应）
+├── third-party/       # CUTLASS submodule，不要修改
+├── others/            # TensorRT / PyTorch distributed 示例
+├── docs/              # 文档资料
+└── slides/            # 演示材料
 ```
 
-## WHERE TO LOOK
+## 去哪里看
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add new simple kernel | `kernels/{topic}/` | Follow `kernels/elementwise/` pattern |
-| Add Tensor Core kernel | `kernels/hgemm/` or `kernels/flash-attn/` | See sub-AGENTS.md |
-| Build HGEMM library | `kernels/hgemm/setup.py` | `python setup.py bdist_wheel` |
-| Build FlashAttention | `kernels/flash-attn/setup.py` | Same pattern |
-| Build FFPA library | `ffpa-attn/setup.py` | Use `tools/build_fast.sh` for ccache |
-| CUTLASS/CuTe reference | `third-party/cutlass/` | Git submodule, read-only |
-| Profiling guide | `kernels/nvidia-nsight/` | nsys/ncu usage |
-| Swizzle patterns | `kernels/swizzle/` | SMEM bank conflict avoidance |
-| Triton kernels | `kernels/openai-triton/` | Python-only Triton implementations |
+| 任务 | 位置 | 说明 |
+|------|------|------|
+| 新增简单 kernel | `kernels/{topic}/` | 参考 `kernels/elementwise/` 模式 |
+| 新增 Tensor Core kernel | `kernels/hgemm/` 或 `kernels/flash-attn/` | 查看子目录的 `AGENTS.md` |
+| 构建 HGEMM 库 | `kernels/hgemm/setup.py` | `python setup.py bdist_wheel` |
+| 构建 FlashAttention | `kernels/flash-attn/setup.py` | 使用同类构建模式 |
+| 构建 FFPA 库 | `ffpa-attn/setup.py` | 使用 `tools/build_fast.sh` 启用 ccache |
+| CUTLASS/CuTe 参考 | `third-party/cutlass/` | Git submodule，只读参考 |
+| Profiling 指南 | `kernels/nvidia-nsight/` | nsys / ncu 用法 |
+| Swizzle 模式 | `kernels/swizzle/` | 避免 SMEM bank conflict |
+| Triton kernels | `kernels/openai-triton/` | 纯 Python Triton 实现 |
 
-## CONVENTIONS
+## 约定
 
-### Kernel File Pattern
-Every kernel topic follows: `{name}.cu` (CUDA) + `{name}.py` (PyTorch binding + test) + `README.md`.
-Python file uses `torch.utils.cpp_extension.load()` for JIT compilation.
+### Kernel 文件模式
 
-### CUDA Naming
-- **Kernel functions**: `{op}_{dtype}[x{vec}][_pack]_kernel` — e.g., `relu_f16x8_pack_kernel`
-- **Variant suffixes**: `_naive`, `_sliced_k`, `_dbuf` (double buffer), `_async`, `_stages`, `_swizzle`
-- **Tensor Core marker**: `*` in README tables = uses Tensor Cores
-- **Constants**: `k`-prefix — `kHeadDim`, `kMmaAtomM`, `kMmaTileSeqLenQ`
-- **Register arrays**: `R_Q`, `R_K`, `R_V`, `R_O`, `R_S`
+每个 kernel 主题通常遵循：`{name}.cu`（CUDA）+ `{name}.py`（PyTorch 绑定与测试）+ `README.md`。
+Python 文件使用 `torch.utils.cpp_extension.load()` 进行 JIT 编译。
 
-### Data Type Variants
-Each kernel typically implements: `f32` → `f32x4` → `f16` → `f16x2` → `f16x8` → `f16x8_pack` (progressive vectorization). Advanced kernels add `bf16`, `fp8_e4m3`, `fp8_e5m2`, `i8`.
+### CUDA 命名
 
-### Code Style
-- **2-space indent** (clang-format enforced, Google-based)
-- **100 char line limit**
-- Left pointer alignment (`int* ptr`)
-- `_Pragma("unroll")` not `#pragma unroll`
-- `__restrict__` on kernel parameters
-- `__launch_bounds__` for occupancy hints
-- Python: black formatter, 80 char line, isort
+- **Kernel 函数**：`{op}_{dtype}[x{vec}][_pack]_kernel`，例如 `relu_f16x8_pack_kernel`
+- **变体后缀**：`_naive`、`_sliced_k`、`_dbuf`（double buffer）、`_async`、`_stages`、`_swizzle`
+- **Tensor Core 标记**：README 表格中的 `*` 表示使用 Tensor Cores
+- **常量**：使用 `k` 前缀，例如 `kHeadDim`、`kMmaAtomM`、`kMmaTileSeqLenQ`
+- **寄存器数组**：`R_Q`、`R_K`、`R_V`、`R_O`、`R_S`
 
-### Compiler Flags
-- C++: `-O3 -std=c++17`
-- NVCC: `-U__CUDA_NO_HALF_OPERATORS__`, `-U__CUDA_NO_HALF_CONVERSIONS__`, `-U__CUDA_NO_BFLOAT16_CONVERSIONS__`
-- Gencode: sm_80 (Ampere), sm_89 (Ada), sm_90 (Hopper)
+### 数据类型变体
 
-## ANTI-PATTERNS (THIS PROJECT)
+每个 kernel 通常按以下顺序扩展：`f32` → `f32x4` → `f16` → `f16x2` → `f16x8` → `f16x8_pack`。高级 kernel 会继续加入 `bf16`、`fp8_e4m3`、`fp8_e5m2`、`i8`。
 
-- **DO NOT** edit files in `ffpa-attn/csrc/cuffpa/generated/` — auto-generated by `env.py`
-- **DO NOT** modify `third-party/` — git submodule, read-only
-- **DO NOT** change clang-format `SortIncludes: false` — manual include order is intentional
-- **DO NOT** commit `.nsys*`, `.ncu*`, `.sqlite*`, build artifacts — see `.gitignore`
-- **NEVER** use 4-space indent in CUDA/C++ — project uses 2-space
-- Kernel `notes-v1.cu` is **deprecated** — don't reference as current pattern
+### 代码风格
 
-## COMMANDS
+- **2 空格缩进**（clang-format 强制，基于 Google 风格）
+- **100 字符行宽限制**
+- 指针左对齐：`int* ptr`
+- 使用 `_Pragma("unroll")`，不要使用 `#pragma unroll`
+- Kernel 参数使用 `__restrict__`
+- 使用 `__launch_bounds__` 提示 occupancy
+- Python：black formatter，80 字符行宽，isort
+
+### 编译参数
+
+- C++：`-O3 -std=c++17`
+- NVCC：`-U__CUDA_NO_HALF_OPERATORS__`、`-U__CUDA_NO_HALF_CONVERSIONS__`、`-U__CUDA_NO_BFLOAT16_CONVERSIONS__`
+- Gencode：sm_80（Ampere）、sm_89（Ada）、sm_90（Hopper）
+
+## 反模式（本项目）
+
+- **不要** 编辑 `ffpa-attn/csrc/cuffpa/generated/` 中的文件，这些文件由 `env.py` 自动生成
+- **不要** 修改 `third-party/`，这是 Git submodule，只读参考
+- **不要** 修改 clang-format 的 `SortIncludes: false`，手动 include 顺序是有意保留的
+- **不要** 提交 `.nsys*`、`.ncu*`、`.sqlite*`、构建产物；详见 `.gitignore`
+- **绝不要** 在 CUDA/C++ 中使用 4 空格缩进，本项目使用 2 空格
+- `notes-v1.cu` 已**废弃**，不要把它作为当前代码模式参考
+
+## 常用命令
 
 ```bash
-# Submodule init
+# 初始化 submodule
 git submodule update --init --recursive --force
 
-# Pre-commit setup
+# 配置 pre-commit
 pip install pre-commit && pre-commit install
 
-# Run a simple kernel (JIT compile + test)
+# 运行一个简单 kernel（JIT 编译 + 测试）
 cd kernels/relu && python relu.py
 
-# Build HGEMM as library
+# 将 HGEMM 构建为库
 cd kernels/hgemm && python setup.py bdist_wheel
 
-# Build FFPA-ATTN (fast, with ccache)
+# 构建 FFPA-ATTN（快速模式，使用 ccache）
 cd ffpa-attn && bash tools/build_fast.sh bdist_wheel
 
-# Build FFPA-ATTN (dev, specific headdims)
+# 构建 FFPA-ATTN（开发模式，指定 head dimensions）
 FFPA_DEV_HEADDIMS=256,512 bash tools/build_fast.sh
 
-# Skip CUDA extension (docs-only)
+# 跳过 CUDA extension（仅文档）
 FFPA_SKIP_CUDA_EXT=1 pip install ".[docs]"
 ```
 
-## NOTES
+## 备注
 
-- `HGEMM/` is a standalone copy of `kernels/hgemm/` published as a separate repo — avoid editing both
-- Tensor Core progression: WMMA (m16n16k16, simpler) → MMA (m16n8k16, PTX-level) → WGMMA (m64n128k16, Hopper) → CuTe (high-level CUTLASS 3.x)
-- FlashAttention-2 MMA kernels: faster than FA2 for small attention (D≤64), gap for large-scale. FFPA handles D>256
-- AGENTS.md is in `.gitignore` — local knowledge only, not committed
-- PyTorch >= 2.7.0 and CUDA >= 13.0 required for ffpa-attn; kernels/ JIT-compiles with any recent PyTorch+CUDA
+- `HGEMM/` 是 `kernels/hgemm/` 的独立发布副本，避免两边同时修改
+- Tensor Core 学习路径：WMMA（m16n16k16，更简单）→ MMA（m16n8k16，PTX 级控制）→ WGMMA（m64n128k16，Hopper）→ CuTe（CUTLASS 3.x 高层抽象）
+- FlashAttention-2 MMA kernels 在小 attention（D≤64）上可能快于 FA2；大规模场景仍有差距。FFPA 面向 D>256
+- `AGENTS.md` 在 `.gitignore` 中，属于本地知识文件
+- `ffpa-attn` 需要 PyTorch >= 2.7.0 和 CUDA >= 13.0；`kernels/` 中的 kernel 可用较新的 PyTorch + CUDA JIT 编译

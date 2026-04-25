@@ -1,60 +1,63 @@
-# HGEMM — Half-Precision GEMM (98-100% cuBLAS)
+# HGEMM：半精度 GEMM（98-100% cuBLAS）
 
-## OVERVIEW
-Progressive HGEMM optimization from naive CUDA cores to Tensor Cores (WMMA→MMA→WGMMA→CuTe), achieving 98-100% of cuBLAS on L20/4090/3080. Also builds as standalone `toy-hgemm` Python package.
+## 概览
 
-## STRUCTURE
+本目录展示 HGEMM 从朴素 CUDA Core 到 Tensor Core（WMMA → MMA → WGMMA → CuTe）的渐进优化过程，在 L20 / 4090 / 3080 上可达到 cuBLAS 约 98-100% 的性能。它也可以构建为独立的 `toy-hgemm` Python package。
+
+## 目录结构
 
 ```
 hgemm/
-├── naive/           # CUDA core implementations (f16, sliced-K, async)
-├── wmma/            # WMMA Tensor Cores (m16n16k16)
-├── mma/             # MMA PTX Tensor Cores (m16n8k16)
-│   ├── basic/       #   Naive MMA, mma2x4, multi-stage
-│   ├── swizzle/     #   SMEM swizzle variants (NN/TN layout)
-│   └── others/      #   Experimental variants
-├── wgmma/           # Hopper WGMMA (m64n128k16) with TMA
-├── cutlass/         # CuTe high-level implementation
-├── cublas/          # cuBLAS reference for benchmarking
-├── bench/           # Profiling scripts (prof.py)
-├── pybind/          # PyTorch C++ binding (hgemm_pybind.cc)
-├── tools/           # Swizzle layout visualization
-├── utils/           # utils.h — timing, cuBLAS wrappers
-├── hgemm.cu         # Top-level includes (aggregates all kernels)
-├── hgemm.py         # Test/benchmark driver (JIT or library mode)
-├── setup.py         # Build as toy-hgemm wheel
-└── README.md        # Comprehensive docs with benchmark tables
+├── naive/           # CUDA Core 实现（f16、sliced-K、async）
+├── wmma/            # WMMA Tensor Cores（m16n16k16）
+├── mma/             # MMA PTX Tensor Cores（m16n8k16）
+│   ├── basic/       #   Naive MMA、mma2x4、multi-stage
+│   ├── swizzle/     #   SMEM swizzle 变体（NN/TN layout）
+│   └── others/      #   实验性变体
+├── wgmma/           # Hopper WGMMA（m64n128k16）+ TMA
+├── cutlass/         # CuTe 高层实现
+├── cublas/          # cuBLAS benchmark reference
+├── bench/           # Profiling 脚本（prof.py）
+├── pybind/          # PyTorch C++ binding（hgemm_pybind.cc）
+├── tools/           # Swizzle layout 可视化
+├── utils/           # utils.h：计时、cuBLAS wrappers
+├── hgemm.cu         # 顶层 include 聚合文件（汇总所有 kernels）
+├── hgemm.py         # 测试/benchmark driver（JIT 或 library 模式）
+├── setup.py         # 构建 toy-hgemm wheel
+└── README.md        # 完整文档和 benchmark 表格
 ```
 
-## WHERE TO LOOK
+## 去哪里看
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add naive kernel variant | `naive/hgemm.cu` or `naive/hgemm_async.cu` | CUDA cores only |
-| Add WMMA variant | `wmma/hgemm_wmma.cu` or `wmma/hgemm_wmma_stage.cu` | m16n16k16 |
-| Add MMA variant | `mma/basic/hgemm_mma.cu` or `mma/basic/hgemm_mma_stage.cu` | m16n8k16 PTX |
-| Add swizzle variant | `mma/swizzle/` | Bank-conflict-free SMEM |
-| Add Hopper kernel | `wgmma/` | m64n128k16, requires sm_90 |
-| Benchmark | `python hgemm.py --mma --plot` | Plots TFLOPS vs cuBLAS |
-| Build library | `python setup.py bdist_wheel` | Produces `toy-hgemm` package |
+| 任务 | 位置 | 说明 |
+|------|------|------|
+| 新增 naive kernel 变体 | `naive/hgemm.cu` 或 `naive/hgemm_async.cu` | 仅 CUDA cores |
+| 新增 WMMA 变体 | `wmma/hgemm_wmma.cu` 或 `wmma/hgemm_wmma_stage.cu` | m16n16k16 |
+| 新增 MMA 变体 | `mma/basic/hgemm_mma.cu` 或 `mma/basic/hgemm_mma_stage.cu` | m16n8k16 PTX |
+| 新增 swizzle 变体 | `mma/swizzle/` | 避免 SMEM bank conflict |
+| 新增 Hopper kernel | `wgmma/` | m64n128k16，需要 sm_90 |
+| Benchmark | `python hgemm.py --mma --plot` | 绘制 TFLOPS 并与 cuBLAS 对比 |
+| 构建库 | `python setup.py bdist_wheel` | 生成 `toy-hgemm` package |
 
-## CONVENTIONS
+## 约定
 
-### Optimization Progression (follow this order)
-1. **Naive** → `hgemm_naive_f16` — baseline, no tiling
-2. **Sliced-K** → `hgemm_sliced_k_f16` — loop over K dimension
-3. **Thread tiling** → `hgemm_t_8x8_sliced_k_f16x4` — 8×8 per thread
-4. **Packed loads** → `..._f16x8_pack` — 128-bit vectorized
-5. **Double buffer** → `..._dbuf` — hide memory latency
-6. **Async copy** → `..._async` — `cp.async` instructions
-7. **WMMA** → `hgemm_wmma_m16n16k16_...` — first Tensor Core step
-8. **MMA** → `hgemm_mma_m16n8k16_...` — PTX-level control
-9. **Multi-stage** → `..._stages` — 2-4 stage pipeline
-10. **Swizzle** → `..._swizzle` — SMEM bank conflict elimination
-11. **CuTe** → `hgemm_mma_stages_..._cute` — CUTLASS 3.x abstraction
-12. **WGMMA** → `hgemm_wgmma_m64n128k16_...` — Hopper only
+### 优化递进顺序
 
-### Kernel Naming
+1. **Naive** → `hgemm_naive_f16`：baseline，无 tiling
+2. **Sliced-K** → `hgemm_sliced_k_f16`：沿 K 维循环
+3. **Thread tiling** → `hgemm_t_8x8_sliced_k_f16x4`：每线程 8×8
+4. **Packed loads** → `..._f16x8_pack`：128-bit 向量化
+5. **Double buffer** → `..._dbuf`：隐藏内存延迟
+6. **Async copy** → `..._async`：使用 `cp.async` 指令
+7. **WMMA** → `hgemm_wmma_m16n16k16_...`：第一步 Tensor Core
+8. **MMA** → `hgemm_mma_m16n8k16_...`：PTX 级控制
+9. **Multi-stage** → `..._stages`：2-4 stage pipeline
+10. **Swizzle** → `..._swizzle`：消除 SMEM bank conflict
+11. **CuTe** → `hgemm_mma_stages_..._cute`：CUTLASS 3.x 抽象
+12. **WGMMA** → `hgemm_wgmma_m64n128k16_...`：仅 Hopper
+
+### Kernel 命名
+
 ```
 hgemm_{api}_{shape}_{features}_kernel
   api:      wmma | mma | wgmma | cute
@@ -62,14 +65,15 @@ hgemm_{api}_{shape}_{features}_kernel
   features: naive | mma2x4 | stages | dbuf | swizzle | tn
 ```
 
-### Layout Convention
-- Default: **NN** layout (both row-major)
-- TN variants: `_tn` suffix — A transposed, B normal
-- TN required for SMEM swizzle and CuTe implementations
+### Layout 约定
 
-## ANTI-PATTERNS
+- 默认：**NN** layout（A、B 都按 row-major）
+- TN 变体：`_tn` 后缀，A transposed，B normal
+- TN 是 SMEM swizzle 和 CuTe 实现所需的 layout
 
-- `hgemm.cu` at root is an **include aggregator** — add new kernels in subdirs, not here
-- `utils/utils.h` has cuBLAS dependency — include only when benchmarking
-- Don't mix NN/TN layouts in same kernel — pick one per file
-- WGMMA kernels require `sm_90` — guard with `#if` or separate gencode
+## 反模式
+
+- 根目录的 `hgemm.cu` 是 **include 聚合文件**，新增 kernel 应放在子目录里，不要直接放这里
+- `utils/utils.h` 依赖 cuBLAS，只在 benchmark 时 include
+- 不要在同一个 kernel 里混用 NN/TN layout，每个文件选择一种 layout
+- WGMMA kernels 需要 `sm_90`，请使用 `#if` guard 或单独的 gencode
