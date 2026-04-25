@@ -28,4 +28,3 @@ build*
 .vscode
 .idea
 .github/copilot-instructions.md
-AGENTS.md
