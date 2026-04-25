@@ -28,12 +28,12 @@
 运行：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
+cd kernels/elementwise
 export TORCH_CUDA_ARCH_LIST=Ada
 python3 elementwise.py
 ```
 
-如果学生的 GPU 不是 Ada，需要按实际架构调整 `TORCH_CUDA_ARCH_LIST`，例如 `Ampere`、`Ada` 或 `Hopper`。
+如果学生的 GPU 不是 Ada，需要按实际架构调整 `TORCH_CUDA_ARCH_LIST`，例如 `Ampere`、`Ada`、`9.0`。Hopper 学习环境若后续会运行 WGMMA/TMA 代码，优先使用带引号的 `"9.0;9.0a"`。
 
 必须理解：
 

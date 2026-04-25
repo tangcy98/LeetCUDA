@@ -9,21 +9,24 @@
 
 ## 当前学生状态
 
-最后更新：尚未开始
+最后更新：2026-04-25
 
 当前阶段：阶段 0：环境与项目入门
 
-当前主题：无
+当前主题：`kernels/elementwise`
 
-当前目标：跑通第一个简单 CUDA kernel，并理解项目工作流。
+当前目标：在已确认的 Hopper 机器上跑通第一个简单 CUDA kernel，并理解项目工作流。
 
 已知环境：
 
-- Repo：`/Users/tangchenyu/LeetCUDA`
-- GPU：未知
-- CUDA version：未知
-- PyTorch version：未知
-- 推荐 `TORCH_CUDA_ARCH_LIST`：未知
+- 运行命令约定：用户在另一台机器上已位于项目根目录，后续命令一律使用相对路径，不使用当前 Codex 机器的绝对路径
+- 实际运行机器：另一台已配置 CUDA/PyTorch 的 NVIDIA Hopper 机器
+- GPU：NVIDIA H20-3e
+- GPU capability：`(9, 0)`
+- PyTorch version：`torch 2.9.1+cu129`
+- CUDA available：`True`
+- 推荐 `TORCH_CUDA_ARCH_LIST`：`"9.0;9.0a"`。说明：PyTorch 2.9.x 支持 `Hopper` 别名，但它展开为 `9.0+PTX`，不包含 `9.0a`；本项目后续 WGMMA/TMA/Hopper 专属代码需要 `9.0a`
+- 当前 Codex 所在机器：仅用于阅读和编辑代码；不要在这台机器上重复检查 CUDA 环境或运行 CUDA benchmark
 
 已知优势：
 
@@ -35,29 +38,92 @@
 - PyTorch extension 工作流。
 - Kernel correctness 与 benchmark 输出解读。
 
-下一步推荐动作：
+下一步推荐动作：在 Hopper 机器上设置 `TORCH_CUDA_ARCH_LIST` 并运行：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
-python3 - <<'PY'
-import torch
-print("torch", torch.__version__)
-print("cuda available", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("device", torch.cuda.get_device_name(0))
-    print("capability", torch.cuda.get_device_capability(0))
-PY
-```
-
-然后设置 `TORCH_CUDA_ARCH_LIST` 并运行：
-
-```bash
+cd kernels/elementwise
+export TORCH_CUDA_ARCH_LIST="9.0;9.0a"
 python3 elementwise.py
 ```
 
 ## 学习记录
 
 新记录追加在本节顶部。
+
+### 2026-04-25 - 阶段 0 - 项目入门与 elementwise 环境检查
+
+状态：进行中
+
+学生目标：
+
+- 刚开始学习 LeetCUDA 项目。
+- 先理解项目学习入口，并尝试进入第一个 elementwise kernel。
+
+阅读过的文件：
+
+- `docs/learning-history.md`
+- `docs/cuda-kernel-learning-roadmap.md`
+- `docs/agent-guide.md`
+- `README.md`
+- `kernels/elementwise/README.md`
+- `kernels/elementwise/elementwise.py`
+- `kernels/elementwise/elementwise.cu`
+
+运行过的命令：
+
+```bash
+python3 - <<'PY'
+import torch
+print('torch', torch.__version__)
+print('cuda available', torch.cuda.is_available())
+if torch.cuda.is_available():
+    print('device', torch.cuda.get_device_name(0))
+    print('capability', torch.cuda.get_device_capability(0))
+PY
+which python3
+python3 --version
+which nvcc
+nvcc --version
+which nvidia-smi
+nvidia-smi
+```
+
+观察到的输出：
+
+- 当前 `python3` 是 `/usr/bin/python3`，版本 Python 3.9.6。
+- `torch` 未安装：`ModuleNotFoundError: No module named 'torch'`。
+- `nvcc` 不存在：`command not found: nvcc`。
+- `nvidia-smi` 不存在：`command not found: nvidia-smi`。
+- 因此当前 shell 暂时无法运行 `kernels/elementwise/elementwise.py`。
+- 用户补充：另一台实际运行机器可用，输出为 `torch 2.9.1+cu129`、`cuda available True`、`device NVIDIA H20-3e`、`capability (9, 0)`。
+
+解释过的概念：
+
+- 项目主题目录通常由 `README.md`、`.py` 测试/绑定文件、`.cu` CUDA 实现组成。
+- `elementwise.py` 使用 `torch.utils.cpp_extension.load()` JIT 编译 `elementwise.cu`。
+- `elementwise.cu` 中 `blockIdx.x * blockDim.x + threadIdx.x` 把 block/thread 映射到线性元素下标。
+
+学生已经展示出的理解：
+
+- 暂未记录，需要后续通过复述或小练习确认。
+
+仍然困惑：
+
+- CUDA 执行模型。
+- PyTorch extension 工作流。
+- CUDA 执行模型与 PyTorch extension 工作流仍需通过第一个运行输出继续解释。
+
+Agent 备注：
+
+- 当前 Codex 所在机器像是 macOS 本地 shell，不是可编译 CUDA kernel 的 Linux/NVIDIA 环境。
+- 学生已说明另一台 Hopper 机器是实际运行环境，以后不要在当前机器重复检查 CUDA 环境。
+- 学生已说明另一台机器不是 `/Users/tangchenyu/LeetCUDA` 路径；后续给可执行命令时，默认用户位于项目根目录，只使用相对路径。
+- 后续 benchmark 和 correctness 验证默认让学生在 Hopper/H20 机器运行，并把输出贴回。
+
+下一步：
+
+- 在 Hopper 机器运行 `cd kernels/elementwise && export TORCH_CUDA_ARCH_LIST="9.0;9.0a" && python3 elementwise.py`。
+- 根据输出解释 correctness、timing、grid/block/thread 映射。
 
 ### YYYY-MM-DD - 阶段 X - 主题名称
 

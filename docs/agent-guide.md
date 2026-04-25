@@ -94,7 +94,7 @@ Agent 应同时扮演 CUDA 导师和 coding assistant。
 可以用文件搜索定位 README 中提到的名字：
 
 ```bash
-rg "kernel_name_or_binding" /Users/tangchenyu/LeetCUDA/kernels
+rg "kernel_name_or_binding" kernels
 ```
 
 ### 4. 检查环境
@@ -102,7 +102,6 @@ rg "kernel_name_or_binding" /Users/tangchenyu/LeetCUDA/kernels
 如果环境未知或信息过期，运行：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA
 python3 - <<'PY'
 import torch
 print("torch", torch.__version__)
@@ -117,7 +116,7 @@ PY
 
 - Capability 8.0 或 8.6 -> `Ampere`
 - Capability 8.9 -> `Ada`
-- Capability 9.0 -> `Hopper`
+- Capability 9.0 -> 普通 kernel 可用 `9.0` 或 PyTorch 别名 `Hopper`；本项目在 Hopper 机器上优先用 `"9.0;9.0a"`，因为后续 WGMMA/TMA/Hopper 专属代码需要 `9.0a`
 
 如果不确定，第一次可以不设置，但要提醒学生编译时间可能更长。
 
@@ -128,13 +127,13 @@ PY
 例子：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
+cd kernels/elementwise
 export TORCH_CUDA_ARCH_LIST=Ada
 python3 elementwise.py
 ```
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/reduce
+cd kernels/reduce
 export TORCH_CUDA_ARCH_LIST=Ada
 python3 block_all_reduce.py
 ```
@@ -142,7 +141,7 @@ python3 block_all_reduce.py
 HGEMM：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/hgemm
+cd kernels/hgemm
 export TORCH_CUDA_ARCH_LIST=Ada
 python3 hgemm.py --wmma
 ```
@@ -263,7 +262,6 @@ int idx = blockIdx.x * blockDim.x + threadIdx.x;
 发现文件：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA
 rg --files kernels
 ```
 
@@ -289,7 +287,7 @@ PY
 运行一个主题：
 
 ```bash
-cd /Users/tangchenyu/LeetCUDA/kernels/TOPIC
+cd kernels/TOPIC
 export TORCH_CUDA_ARCH_LIST=Ada
 python3 TOPIC.py
 ```
