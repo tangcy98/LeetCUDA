@@ -8,6 +8,16 @@
 
 LeetCUDA 是一个面向学习的 CUDA kernel 仓库，包含 200+ 个带 PyTorch 绑定的 CUDA kernel 实现，并附带两个独立库：HGEMM（达到 cuBLAS 98-100% 性能）和 FFPA-Attention（大 head dimension 场景下比 SDPA 快 1.8-3 倍）。项目按主题组织，难度从朴素 CUDA Core kernel 逐步推进到 Tensor Core（WMMA → MMA → WGMMA → CuTe）。
 
+## 授课入口：必须先查看 docs
+
+当 agent 要帮助用户学习 CUDA kernel、跑通项目内容、解释代码或制定下一步学习计划时，必须先查阅 `docs/` 下的三份核心文档，并据此开始授课：
+
+1. `docs/learning-history.md`：读取学生当前阶段、已知环境、已完成内容、仍然困惑的问题。
+2. `docs/cuda-kernel-learning-roadmap.md`：定位用户当前主题属于哪个学习阶段，并确定前置知识和下一步练习。
+3. `docs/agent-guide.md`：按照其中的会话流程执行：读历史、映射路线图、检查项目文件、运行最小测试、解释输出、做小修改、更新学习历史。
+
+如果聊天上下文缺失，以 `docs/learning-history.md` 为准；如果历史为空，默认从阶段 0 开始，先检查环境并跑通 `kernels/elementwise`。不要只根据本文件直接授课，本文件只是入口，真正的教学流程以 `docs/` 为准。
+
 ## 目录结构
 
 ```

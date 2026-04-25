@@ -1,41 +1,41 @@
-# CUDA Kernel Learning History
+# CUDA Kernel 学习历史记录
 
-This file is intentionally reserved as the durable learning record for the student. Future agents should read this file before giving advice or running commands.
+本文件专门用于长期记录学生的学习状态。后续 agent 在给建议或运行命令前，必须先阅读本文件。
 
-Use this together with:
+请与以下文档配合使用：
 
-- [CUDA Kernel Learning Roadmap](./cuda-kernel-learning-roadmap.md)
-- [Agent Guide](./agent-guide.md)
+- [CUDA Kernel 学习路线图](./cuda-kernel-learning-roadmap.md)
+- [Agent 指导文档](./agent-guide.md)
 
-## Current Student State
+## 当前学生状态
 
-Last updated: not started
+最后更新：尚未开始
 
-Current stage: Stage 0 - Environment And Project Orientation
+当前阶段：阶段 0：环境与项目入门
 
-Current topic: none
+当前主题：无
 
-Current target: run the first simple CUDA kernel and understand the project workflow.
+当前目标：跑通第一个简单 CUDA kernel，并理解项目工作流。
 
-Known environment:
+已知环境：
 
-- Repo: `/Users/tangchenyu/LeetCUDA`
-- GPU: unknown
-- CUDA version: unknown
-- PyTorch version: unknown
-- Preferred `TORCH_CUDA_ARCH_LIST`: unknown
+- Repo：`/Users/tangchenyu/LeetCUDA`
+- GPU：未知
+- CUDA version：未知
+- PyTorch version：未知
+- 推荐 `TORCH_CUDA_ARCH_LIST`：未知
 
-Known strengths:
+已知优势：
 
-- Starting from zero CUDA kernel background.
+- 从零开始学习 CUDA kernel，学习路径可以按路线图完整推进。
 
-Known gaps:
+已知短板：
 
-- CUDA execution model.
-- PyTorch extension workflow.
-- Kernel correctness and benchmark interpretation.
+- CUDA 执行模型。
+- PyTorch extension 工作流。
+- Kernel correctness 与 benchmark 输出解读。
 
-Next recommended action:
+下一步推荐动作：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
@@ -49,160 +49,159 @@ if torch.cuda.is_available():
 PY
 ```
 
-Then set `TORCH_CUDA_ARCH_LIST` and run:
+然后设置 `TORCH_CUDA_ARCH_LIST` 并运行：
 
 ```bash
 python3 elementwise.py
 ```
 
-## Session Log
+## 学习记录
 
-Append new entries at the top of this section.
+新记录追加在本节顶部。
 
-### YYYY-MM-DD - Stage X - Topic Name
+### YYYY-MM-DD - 阶段 X - 主题名称
 
-Status: not started | in progress | completed | blocked
+状态：未开始 | 进行中 | 已完成 | 阻塞
 
-Student goal:
+学生目标：
 
-- Fill in the requested learning target.
+- 填写本次学习目标。
 
-Files studied:
+阅读过的文件：
 
 - `path/to/file`
 
-Commands run:
+运行过的命令：
 
 ```bash
 # command here
 ```
 
-Observed output:
+观察到的输出：
 
-- Summarize correctness, timings, errors, or build failures.
+- 总结 correctness、timing、错误信息或构建失败。
 
-Concepts explained:
+解释过的概念：
 
-- Concept 1
-- Concept 2
+- 概念 1
+- 概念 2
 
-Student demonstrated understanding:
+学生已经展示出的理解：
 
-- What the student could explain or implement independently.
+- 学生能独立解释或实现的内容。
 
-Still confusing:
+仍然困惑：
 
-- Question 1
-- Question 2
+- 问题 1
+- 问题 2
 
-Agent notes:
+Agent 备注：
 
-- Important context for the next agent.
-- Avoid repeating explanations that already worked poorly.
-- Mention any local environment quirks.
+- 给下一个 agent 的重要上下文。
+- 避免重复使用效果不好的解释方式。
+- 记录本地环境的特殊问题。
 
-Next step:
+下一步：
 
-- Concrete next action.
+- 一个具体、可执行的下一步动作。
 
-## Concept Checklist
+## 概念 Checklist
 
-Mark items as done only when the student can explain them without merely repeating code.
+只有当学生能主动解释，而不是照着代码复述时，才勾选对应项目。
 
-### Stage 0: Workflow
+### 阶段 0：工作流
 
-- [ ] Locate topic README, CUDA source, and Python test.
-- [ ] Run one kernel.
-- [ ] Interpret correctness output.
-- [ ] Identify GPU and compute capability.
+- [ ] 找到主题 README、CUDA source 和 Python test。
+- [ ] 跑通一个 kernel。
+- [ ] 解读 correctness 输出。
+- [ ] 识别 GPU 与 compute capability。
 
-### Stage 1: Elementwise
+### 阶段 1：Elementwise
 
-- [ ] Explain grid, block, and thread index.
-- [ ] Explain boundary check.
-- [ ] Explain fp32 vs fp16 kernel variants.
-- [ ] Explain vectorized load/store.
-- [ ] Implement a tiny new elementwise kernel.
+- [ ] 解释 grid、block、thread index。
+- [ ] 解释边界检查。
+- [ ] 解释 fp32 与 fp16 kernel 变体。
+- [ ] 解释向量化 load/store。
+- [ ] 实现一个很小的新 elementwise kernel。
 
-### Stage 2: Memory Layout
+### 阶段 2：内存布局
 
-- [ ] Convert 2D indices to linear offsets.
-- [ ] Identify contiguous access.
-- [ ] Explain coalescing.
-- [ ] Explain why transpose is harder than elementwise.
-- [ ] Explain a simple atomic operation use case.
+- [ ] 将二维索引转换为线性 offset。
+- [ ] 判断连续访问。
+- [ ] 解释 coalescing。
+- [ ] 解释 transpose 为什么比 elementwise 更难。
+- [ ] 解释一个简单 atomic 使用场景。
 
-### Stage 3: Reduction
+### 阶段 3：Reduction
 
-- [ ] Explain warp reduction.
-- [ ] Explain block reduction.
-- [ ] Explain `__shfl_down_sync`.
-- [ ] Explain shared memory reduction.
-- [ ] Compare fp16 and fp32 accumulation.
+- [ ] 解释 warp reduction。
+- [ ] 解释 block reduction。
+- [ ] 解释 `__shfl_down_sync`。
+- [ ] 解释 shared memory reduction。
+- [ ] 对比 fp16 与 fp32 accumulation。
 
-### Stage 4: Softmax And Norm
+### 阶段 4：Softmax 与 Norm
 
-- [ ] Derive safe softmax.
-- [ ] Explain online softmax.
-- [ ] Explain LayerNorm reductions.
-- [ ] Explain RMSNorm.
-- [ ] Compare custom kernel output with PyTorch output.
+- [ ] 推导 safe softmax。
+- [ ] 解释 online softmax。
+- [ ] 解释 LayerNorm 中的 reductions。
+- [ ] 解释 RMSNorm。
+- [ ] 对比 custom kernel 与 PyTorch 输出。
 
-### Stage 5: GEMV
+### 阶段 5：GEMV
 
-- [ ] Explain GEMV as many dot products.
-- [ ] Explain K dimension splitting.
-- [ ] Explain why GEMV can be memory-bound.
-- [ ] Compare sgemv and hgemv variants.
+- [ ] 解释 GEMV 是许多 dot product。
+- [ ] 解释 K 维拆分。
+- [ ] 解释 GEMV 为什么可能 memory-bound。
+- [ ] 对比 sgemv 与 hgemv 变体。
 
-### Stage 6: CUDA Core GEMM
+### 阶段 6：CUDA Core GEMM
 
-- [ ] Explain naive GEMM.
-- [ ] Explain block tile.
-- [ ] Explain thread tile.
-- [ ] Explain shared memory reuse.
-- [ ] Explain double buffering.
-- [ ] Explain async copy at a high level.
+- [ ] 解释 naive GEMM。
+- [ ] 解释 block tile。
+- [ ] 解释 thread tile。
+- [ ] 解释 shared memory reuse。
+- [ ] 解释 double buffering。
+- [ ] 高层解释 async copy。
 
-### Stage 7: Tensor Core HGEMM
+### 阶段 7：Tensor Core HGEMM
 
-- [ ] Explain Tensor Core purpose.
-- [ ] Explain WMMA.
-- [ ] Explain MMA PTX atom shape.
-- [ ] Explain warp tile vs block tile.
-- [ ] Explain shared memory padding/swizzle.
-- [ ] Compare custom HGEMM with cuBLAS.
+- [ ] 解释 Tensor Core 的作用。
+- [ ] 解释 WMMA。
+- [ ] 解释 MMA PTX atom shape。
+- [ ] 解释 warp tile 与 block tile。
+- [ ] 解释 shared memory padding / swizzle。
+- [ ] 对比 custom HGEMM 与 cuBLAS。
 
-### Stage 8: FlashAttention
+### 阶段 8：FlashAttention
 
-- [ ] Explain attention formula.
-- [ ] Explain why full attention matrix is expensive.
-- [ ] Explain tiled QK.
-- [ ] Explain online softmax in attention.
-- [ ] Explain PV accumulation.
-- [ ] Explain split-KV vs split-Q.
-- [ ] Explain shared KV/QKV.
+- [ ] 解释 attention 公式。
+- [ ] 解释为什么完整 attention matrix 很贵。
+- [ ] 解释 tiled QK。
+- [ ] 解释 attention 中的 online softmax。
+- [ ] 解释 PV accumulation。
+- [ ] 解释 split-KV 与 split-Q。
+- [ ] 解释 shared KV/QKV。
 
-### Stage 9: FFPA
+### 阶段 9：FFPA
 
-- [ ] Explain large head dimension problem.
-- [ ] Explain Split-D at a high level.
-- [ ] Run or inspect FFPA examples.
-- [ ] Compare FFPA with SDPA.
+- [ ] 解释 large head dimension 问题。
+- [ ] 高层解释 Split-D。
+- [ ] 运行或阅读 FFPA examples。
+- [ ] 对比 FFPA 与 SDPA。
 
-## Troubleshooting Notes
+## 故障排查记录
 
-Record recurring issues here.
+在这里记录反复出现的问题。
 
-### Build Or Import Failures
+### Build 或 Import 失败
 
-- No known issue yet.
+- 暂无已知问题。
 
-### GPU Architecture Issues
+### GPU 架构问题
 
-- No known issue yet.
+- 暂无已知问题。
 
-### Version Issues
+### 版本问题
 
-- No known issue yet.
-
+- 暂无已知问题。

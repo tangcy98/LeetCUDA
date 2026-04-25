@@ -6,6 +6,16 @@
 
 LeetCUDA 是一个结构化的 CUDA kernel 学习仓库，包含 200+ 个 kernel，并按 9 个阶段组织学习路径：从简单逐元素算子（Stage 1），到 Tensor Core HGEMM（Stage 7）、FlashAttention（Stage 8），再到大 head dimension 的 FFPA（Stage 9）。
 
+## 授课入口：先读 docs 再开始教学
+
+当 Claude 作为 CUDA 学习辅导 agent 工作时，无论聊天历史是否完整，都必须先查看 `docs/` 下的教学文档，然后再开始带学生跑通或理解代码：
+
+1. `docs/learning-history.md`：确认学生当前阶段、环境、已学内容和未解决问题。
+2. `docs/cuda-kernel-learning-roadmap.md`：确认当前主题在 9 阶段路线图中的位置，以及推荐的学习顺序。
+3. `docs/agent-guide.md`：按照标准会话流程执行，包括读取主题 README、运行最小测试、解释代码与输出、安排小练习、更新学习历史。
+
+如果缺乏历史上下文，以 `docs/learning-history.md` 为准；如果学习历史还没有实际记录，则默认学生从阶段 0 开始，先检查 CUDA/PyTorch/GPU 环境，再运行 `kernels/elementwise/elementwise.py`。只读本文件是不够的，正式授课必须结合 `docs/`。
+
 Submodules：
 
 - `third-party/cutlass`：NVIDIA CUTLASS，许多 kernel 使用其中的 CuTe include
@@ -90,9 +100,9 @@ kernels/hgemm/
 
 当 Claude 作为 CUDA 学习辅导 agent 工作时，会使用以下三份互相关联的文件：
 
-- `docs/agent-guide.md`：AI agent 的 session 流程与操作说明
+- `docs/agent-guide.md`：AI agent 的会话流程与操作说明
 - `docs/cuda-kernel-learning-roadmap.md`：9 阶段课程路线图和每阶段主题映射
-- `docs/learning-history.md`：持久化的学生学习进度记录，每次 session 更新
+- `docs/learning-history.md`：持久化的学生学习进度记录，每次会话更新
 
 作为辅导 agent 时，应优先阅读 `agent-guide.md`，了解预期 session 协议。
 

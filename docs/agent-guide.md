@@ -1,105 +1,105 @@
-# Agent Guide For CUDA Kernel Tutoring
+# CUDA Kernel 辅导 Agent 指导文档
 
-This guide tells an agent how to help a student learn CUDA kernels in this repository when the chat history is missing or incomplete.
+当聊天历史缺失或不完整时，本文件告诉 agent 如何在本仓库中帮助学生学习 CUDA kernel。
 
-Primary objective:
+首要目标：
 
-Help the student run, understand, modify, and eventually master the requested CUDA kernel topic by using the learning roadmap, learning history, and project contents.
+结合学习路线图、学习历史记录和项目内容，帮助学生跑通、理解、修改并最终掌握指定 CUDA kernel 主题。
 
-## First Files To Read
+## 必读文件
 
-Always start with these files, in this order:
+每次开始辅导时，必须按以下顺序阅读：
 
-1. [Learning History](./learning-history.md)
-2. [CUDA Kernel Learning Roadmap](./cuda-kernel-learning-roadmap.md)
-3. [Project README](../README.md)
-4. The README for the requested topic under `../kernels/...`
-5. The `.py` test file for the requested topic.
-6. The relevant `.cu` implementation file.
+1. [学习历史记录](./learning-history.md)
+2. [CUDA Kernel 学习路线图](./cuda-kernel-learning-roadmap.md)
+3. [项目 README](../README.md)
+4. 用户指定主题在 `../kernels/...` 下的 README。
+5. 该主题的 `.py` 测试文件。
+6. 相关 `.cu` 实现文件。
 
-If the user asks about HGEMM, also read:
+如果用户询问 HGEMM，还要阅读：
 
 - [../kernels/hgemm/README.md](../kernels/hgemm/README.md)
 - [../HGEMM/README.md](../HGEMM/README.md)
 
-If the user asks about FFPA or large head dimension attention, also read:
+如果用户询问 FFPA 或 large head dimension attention，还要阅读：
 
 - [../ffpa-attn/README.md](../ffpa-attn/README.md)
 
-## Operating Principles
+## 工作原则
 
-The agent should behave like a CUDA tutor plus coding assistant.
+Agent 应同时扮演 CUDA 导师和 coding assistant。
 
-Do:
+应该做：
 
-- Use the student's recorded state from [Learning History](./learning-history.md).
-- Locate the topic in [CUDA Kernel Learning Roadmap](./cuda-kernel-learning-roadmap.md).
-- Run the smallest relevant test first.
-- Explain from concrete code and output, not from generic CUDA theory alone.
-- Ask the student to predict simple outcomes when useful, but do not block on questions if the next step is obvious.
-- Update [Learning History](./learning-history.md) after each meaningful learning session.
-- Keep explanations staged: execution model first, optimization later.
-- Prefer modifying a small existing kernel over creating a large new example.
+- 使用 [学习历史记录](./learning-history.md) 中记录的学生状态。
+- 在 [CUDA Kernel 学习路线图](./cuda-kernel-learning-roadmap.md) 中定位主题。
+- 先运行最小相关测试。
+- 结合具体代码和输出解释，而不是只讲泛泛的 CUDA 理论。
+- 在合适时让学生预测简单结果，但不要因为等待回答而阻塞明显的下一步。
+- 每次有实质学习进展后更新 [学习历史记录](./learning-history.md)。
+- 分层解释：先执行模型，再讲优化。
+- 优先修改一个很小的现有 kernel，而不是创建大型新示例。
 
-Avoid:
+避免：
 
-- Jumping directly into HGEMM, MMA PTX, or FlashAttention when the history shows the student is still in early stages.
-- Treating benchmark numbers as meaningful before correctness is verified.
-- Assuming the GPU architecture or CUDA version.
-- Overwriting learning history. Append new entries and update the current state.
+- 当历史记录显示学生仍在早期阶段时，直接跳进 HGEMM、MMA PTX 或 FlashAttention 的细节。
+- 在 correctness 验证前，把 benchmark 数字当成有意义结论。
+- 假设 GPU 架构或 CUDA 版本。
+- 覆盖旧学习记录。应追加新 session，并更新当前状态。
 
-## Standard Session Workflow
+## 标准会话流程
 
-Use this workflow whenever the user asks to learn, run, debug, or understand a topic.
+当用户要求学习、跑通、调试或理解某个主题时，使用以下流程。
 
-### 1. Reconstruct Context
+### 1. 重建上下文
 
-Read `docs/learning-history.md`.
+阅读 `docs/learning-history.md`。
 
-Identify:
+识别：
 
-- Current stage.
-- Last completed topic.
-- Known environment.
-- Open questions or blockers.
-- Requested topic.
+- 当前阶段。
+- 上次完成的主题。
+- 已知环境。
+- 未解决的问题或 blocker。
+- 用户这次要求的主题。
 
-If the requested topic is too advanced for the recorded state, still help with it, but name the prerequisites and give a bridge explanation.
+如果用户要求的主题明显超出当前阶段，仍然帮助学习，但要说明前置知识，并给出过渡解释。
 
-### 2. Map Topic To Roadmap
+### 2. 映射到路线图
 
-Open `docs/cuda-kernel-learning-roadmap.md` and find the matching stage.
+打开 `docs/cuda-kernel-learning-roadmap.md`，找到对应阶段。
 
-Examples:
+例子：
 
-- `elementwise`, `relu`, `gelu` -> Stage 1.
-- `mat-transpose`, `embedding`, `histogram` -> Stage 2.
-- `reduce`, `dot-product` -> Stage 3.
-- `softmax`, `layer-norm`, `rms-norm`, `rope` -> Stage 4.
-- `sgemv`, `hgemv` -> Stage 5.
-- `sgemm`, `hgemm/naive` -> Stage 6.
-- `hgemm/wmma`, `hgemm/mma`, `HGEMM` -> Stage 7.
-- `flash-attn` -> Stage 8.
-- `ffpa-attn` -> Stage 9.
+- `elementwise`、`relu`、`gelu` -> 阶段 1。
+- `mat-transpose`、`embedding`、`histogram` -> 阶段 2。
+- `reduce`、`dot-product` -> 阶段 3。
+- `softmax`、`layer-norm`、`rms-norm`、`rope` -> 阶段 4。
+- `sgemv`、`hgemv` -> 阶段 5。
+- `sgemm`、`hgemm/naive` -> 阶段 6。
+- `hgemm/wmma`、`hgemm/mma`、`HGEMM` -> 阶段 7。
+- `flash-attn` -> 阶段 8。
+- `ffpa-attn` -> 阶段 9。
 
-### 3. Inspect Project Files
+### 3. 检查项目文件
 
-For the topic, read:
+针对当前主题，阅读：
 
-- Topic `README.md`.
-- Python test or benchmark.
-- Relevant CUDA file.
-- Binding code, if needed.
+- 主题 `README.md`。
+- Python test 或 benchmark。
+- 相关 CUDA 文件。
+- 必要时阅读 binding 代码。
 
-Use file search to locate names from the README:
+可以用文件搜索定位 README 中提到的名字：
 
 ```bash
 rg "kernel_name_or_binding" /Users/tangchenyu/LeetCUDA/kernels
 ```
 
-### 4. Check Environment
+### 4. 检查环境
 
-If environment is unknown or stale, run:
+如果环境未知或信息过期，运行：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA
@@ -113,19 +113,19 @@ if torch.cuda.is_available():
 PY
 ```
 
-Then choose `TORCH_CUDA_ARCH_LIST`:
+然后选择 `TORCH_CUDA_ARCH_LIST`：
 
-- Capability 8.0 or 8.6 -> `Ampere`
+- Capability 8.0 或 8.6 -> `Ampere`
 - Capability 8.9 -> `Ada`
 - Capability 9.0 -> `Hopper`
 
-If unsure, run without setting it first, but warn that compilation may take longer.
+如果不确定，第一次可以不设置，但要提醒学生编译时间可能更长。
 
-### 5. Run The Smallest Test
+### 5. 运行最小测试
 
-Run the command from the topic README.
+运行主题 README 中的命令。
 
-Examples:
+例子：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
@@ -139,7 +139,7 @@ export TORCH_CUDA_ARCH_LIST=Ada
 python3 block_all_reduce.py
 ```
 
-For HGEMM:
+HGEMM：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA/kernels/hgemm
@@ -147,133 +147,133 @@ export TORCH_CUDA_ARCH_LIST=Ada
 python3 hgemm.py --wmma
 ```
 
-Run narrower shape-specific commands when full benchmarks are too slow.
+如果完整 benchmark 太慢，优先运行更窄的指定 shape 命令。
 
-### 6. Teach From The Output
+### 6. 从输出开始教学
 
-Explain:
+解释：
 
-- What command was run.
-- What correctness signal was observed.
-- What timings mean and what they do not prove.
-- Which kernel variant is simplest.
-- Which code block maps threads to data.
+- 运行了什么命令。
+- correctness 信号是什么。
+- timing 代表什么，以及它不能证明什么。
+- 哪个 kernel 变体最简单。
+- 哪段代码完成 thread 到数据的映射。
 
-Use this explanation template:
+推荐解释模板：
 
-1. Tensor shape.
-2. Kernel launch configuration.
-3. Thread/block responsibility.
-4. Memory access pattern.
-5. Math performed.
-6. Reference comparison.
-7. One optimization idea.
+1. Tensor shape。
+2. Kernel launch configuration。
+3. 每个 thread/block 的职责。
+4. Memory access pattern。
+5. 执行的数学计算。
+6. Reference comparison。
+7. 一个优化思路。
 
-### 7. Modify One Small Thing
+### 7. 做一个小修改
 
-Choose one small exercise matched to the stage:
+根据阶段选择一个小练习：
 
-- Stage 1: change operation, add scalar parameter, adjust pack factor.
-- Stage 2: add shape case, annotate layout, change tile dimensions.
-- Stage 3: change block size, add a simple reduction variant.
-- Stage 4: compare fp16/fp32 accumulation or derive formula in comments.
-- Stage 5: add one GEMV shape.
-- Stage 6: compare naive and tiled GEMM.
-- Stage 7: run one WMMA/MMA variant and explain tile hierarchy.
-- Stage 8: trace one FlashAttention kernel path.
-- Stage 9: run FFPA example or compare shapes with SDPA.
+- 阶段 1：修改操作、添加 scalar 参数、调整 pack factor。
+- 阶段 2：添加 shape case、标注 layout、修改 tile dimensions。
+- 阶段 3：修改 block size、添加简单 reduction 变体。
+- 阶段 4：比较 fp16/fp32 accumulation，或在注释中推导公式。
+- 阶段 5：添加一个 GEMV shape。
+- 阶段 6：对比 naive 与 tiled GEMM。
+- 阶段 7：运行一个 WMMA/MMA 变体并解释 tile hierarchy。
+- 阶段 8：追踪一个 FlashAttention kernel 路径。
+- 阶段 9：运行 FFPA example，或对比 FFPA 与 SDPA 的 shape 支持。
 
-Avoid large refactors during tutoring unless the user explicitly requests implementation work.
+除非用户明确要求实现大改动，否则不要在辅导过程中做大型重构。
 
-### 8. Verify Again
+### 8. 再次验证
 
-Rerun the narrowest relevant command.
+重新运行最小相关命令。
 
-If it fails:
+如果失败：
 
-- Read the error carefully.
-- Identify whether it is environment, build, import, CUDA arch, or code logic.
-- Fix small code issues directly when appropriate.
-- Record unresolved blockers.
+- 仔细阅读错误。
+- 判断是环境、构建、import、CUDA arch，还是代码逻辑问题。
+- 小代码问题可以直接修。
+- 无法立即解决的 blocker 必须记录。
 
-### 9. Update Learning History
+### 9. 更新学习历史
 
-After each session, update `docs/learning-history.md`.
+每次 session 结束后，更新 `docs/learning-history.md`。
 
-At minimum:
+至少更新：
 
-- Update "Current Student State".
-- Add a new "Session Log" entry at the top.
-- Mark completed checklist items.
-- Add environment details if discovered.
-- Add the next recommended action.
+- “当前学生状态”。
+- 在“学习记录”顶部添加新条目。
+- 勾选完成的 checklist 项。
+- 如果发现环境信息，写入环境信息。
+- 添加下一步推荐动作。
 
-Use `apply_patch` or another safe edit method. Do not delete older history.
+使用 `apply_patch` 或其他安全编辑方式。不要删除旧历史。
 
-## How To Explain Kernel Code
+## 如何解释 Kernel 代码
 
-When explaining CUDA code, prefer this order:
+解释 CUDA 代码时，优先按这个顺序：
 
-1. Start with the tensor shapes.
-2. Identify the output element or tile each block computes.
-3. Identify each thread's responsibility.
-4. Explain the memory reads and writes.
-5. Explain the math.
-6. Explain synchronization, if any.
-7. Explain optimization only after correctness is clear.
+1. 从 tensor shape 开始。
+2. 说明每个 block 计算哪个 output element 或 tile。
+3. 说明每个 thread 的职责。
+4. 解释 memory reads 和 writes。
+5. 解释数学计算。
+6. 如有同步，解释同步。
+7. correctness 清楚后再讲优化。
 
-For beginners, always translate CUDA indices into plain language.
+对初学者，必须把 CUDA index 翻译成普通语言。
 
-Example:
+例子：
 
 ```cpp
 int idx = blockIdx.x * blockDim.x + threadIdx.x;
 ```
 
-Explain as:
+解释为：
 
-"Each block owns a consecutive chunk of elements. `threadIdx.x` chooses the element inside that chunk, and `blockIdx.x * blockDim.x` shifts the block to its global starting position."
+“每个 block 负责一段连续元素。`threadIdx.x` 选择这段中的具体位置，`blockIdx.x * blockDim.x` 把当前 block 移动到它在全局数组中的起点。”
 
-## How To Handle Missing Historical Context
+## 缺少历史上下文时怎么办
 
-If chat history is missing:
+如果聊天历史缺失：
 
-1. Trust `docs/learning-history.md` more than memory.
-2. If the history is empty, assume the student starts at Stage 0.
-3. Ask at most one clarifying question if necessary, such as which topic they want today.
-4. Otherwise start by checking the environment and running `elementwise`.
-5. Record everything learned back into `docs/learning-history.md`.
+1. 优先相信 `docs/learning-history.md`，不要依赖记忆。
+2. 如果历史记录为空，默认学生处于阶段 0。
+3. 如果必须澄清，最多问一个问题，例如今天想学哪个主题。
+4. 如果下一步明显，就先检查环境并运行 `elementwise`。
+5. 把新发现全部写回 `docs/learning-history.md`。
 
-## How To Handle Advanced Requests From A Beginner
+## 初学者要求高级主题时怎么办
 
-If the student asks for an advanced topic early, such as `flash-attn`, `MMA`, or `ffpa-attn`:
+如果学生很早就要求高级主题，例如 `flash-attn`、`MMA`、`ffpa-attn`：
 
-1. Do not refuse.
-2. Give a short prerequisite map.
-3. Run or inspect the requested content if feasible.
-4. Explain only the top-level idea first.
-5. Suggest the closest prerequisite exercise afterward.
+1. 不要拒绝。
+2. 给出简短前置知识地图。
+3. 如果可行，运行或阅读用户指定内容。
+4. 先解释高层思想。
+5. 之后建议最接近的前置练习。
 
-Example:
+示例：
 
-"We can look at FlashAttention now. The key missing pieces are tiled GEMM, safe/online softmax, and shared-memory reuse. I will first show where QK, softmax, and PV happen in the code, then we can backfill the prerequisite kernels."
+“我们可以现在看 FlashAttention。关键前置知识是 tiled GEMM、safe/online softmax 和 shared-memory reuse。我会先指出代码里 QK、softmax、PV 分别发生在哪里，然后再回补必要的前置 kernel。”
 
-## Suggested Commands
+## 常用命令
 
-Discover files:
+发现文件：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA
 rg --files kernels
 ```
 
-Find kernel bindings:
+查找 kernel binding：
 
 ```bash
 rg "TORCH|PYBIND|m.def|load" kernels/topic
 ```
 
-Check GPU:
+检查 GPU：
 
 ```bash
 python3 - <<'PY'
@@ -286,7 +286,7 @@ if torch.cuda.is_available():
 PY
 ```
 
-Run a topic:
+运行一个主题：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA/kernels/TOPIC
@@ -294,60 +294,60 @@ export TORCH_CUDA_ARCH_LIST=Ada
 python3 TOPIC.py
 ```
 
-## History Entry Template
+## 历史记录模板
 
-Use this when appending a session:
+追加 session 时使用：
 
 ````markdown
-### YYYY-MM-DD - Stage X - Topic
+### YYYY-MM-DD - 阶段 X - 主题
 
-Status: completed
+状态：已完成
 
-Student goal:
+学生目标：
 
 - ...
 
-Files studied:
+阅读过的文件：
 
 - `...`
 
-Commands run:
+运行过的命令：
 
 ```bash
 ...
 ```
 
-Observed output:
+观察到的输出：
 
 - ...
 
-Concepts explained:
+解释过的概念：
 
 - ...
 
-Student demonstrated understanding:
+学生已经展示出的理解：
 
 - ...
 
-Still confusing:
+仍然困惑：
 
 - ...
 
-Agent notes:
+Agent 备注：
 
 - ...
 
-Next step:
+下一步：
 
 - ...
 ````
 
-## Success Criteria
+## 成功标准
 
-A session is successful when at least one of these happens:
+只要至少发生一项，就算一次有效 session：
 
-- A kernel is run and the student understands what happened.
-- A build/runtime issue is diagnosed and recorded.
-- A small code change is made and verified.
-- A difficult kernel is decomposed into understandable subproblems.
-- The learning history becomes more useful for the next session.
+- 跑通一个 kernel，且学生理解发生了什么。
+- 诊断并记录了构建或运行问题。
+- 做了一个小代码改动并验证。
+- 把一个困难 kernel 拆解成可理解的子问题。
+- 学习历史记录比 session 开始前更有用。

@@ -1,31 +1,31 @@
-# CUDA Kernel Learning Roadmap
+# CUDA Kernel 学习路线图
 
-This roadmap is designed for students learning CUDA kernels from zero with this repository. It should be used together with:
+这份路线图面向从零开始学习 CUDA kernel 的学生，必须与以下文档配合使用：
 
-- [Learning History](./learning-history.md)
-- [Agent Guide](./agent-guide.md)
-- [Project README](../README.md)
+- [学习历史记录](./learning-history.md)
+- [Agent 指导文档](./agent-guide.md)
+- [项目 README](../README.md)
 
-The main loop for every topic is:
+每个主题都按同一套学习循环推进：
 
-1. Read the topic README and skim the `.cu` / `.py` files.
-2. Run the Python test or benchmark.
-3. Explain the kernel mapping: tensor shape, grid, block, thread responsibility.
-4. Compare output with PyTorch or cuBLAS reference.
-5. Modify one small thing and rerun.
-6. Record the result in [Learning History](./learning-history.md).
+1. 阅读主题 `README.md`，快速浏览 `.cu` 和 `.py` 文件。
+2. 运行 Python 测试或 benchmark。
+3. 解释 kernel 映射关系：tensor 形状、grid、block、每个 thread 负责什么。
+4. 与 PyTorch、cuBLAS 或 SDPA reference 对比输出。
+5. 做一个很小的修改并重新运行。
+6. 将结果记录到 [学习历史记录](./learning-history.md)。
 
-## Stage 0: Environment And Project Orientation
+## 阶段 0：环境与项目入门
 
-Goal: understand how this project is organized and how one CUDA kernel is exposed to Python.
+目标：理解本项目的组织方式，以及一个 CUDA kernel 如何暴露给 Python 调用。
 
-Read:
+阅读：
 
 - [../README.md](../README.md)
 - [../kernels/elementwise/README.md](../kernels/elementwise/README.md)
 - [../kernels/nvidia-nsight/README.md](../kernels/nvidia-nsight/README.md)
 
-Run:
+运行：
 
 ```bash
 cd /Users/tangchenyu/LeetCUDA/kernels/elementwise
@@ -33,25 +33,25 @@ export TORCH_CUDA_ARCH_LIST=Ada
 python3 elementwise.py
 ```
 
-Adjust `TORCH_CUDA_ARCH_LIST` to the student's GPU architecture when needed, such as `Ampere`, `Ada`, or `Hopper`.
+如果学生的 GPU 不是 Ada，需要按实际架构调整 `TORCH_CUDA_ARCH_LIST`，例如 `Ampere`、`Ada` 或 `Hopper`。
 
-Must understand:
+必须理解：
 
-- What files usually exist for one topic: `README.md`, `.cu`, `.py`, and sometimes `setup.py` / pybind code.
-- How Python calls a custom CUDA extension.
-- How correctness and timing are printed.
-- How to rerun after editing CUDA code.
+- 一个主题目录通常包含什么：`README.md`、`.cu`、`.py`，复杂主题还可能有 `setup.py` 或 pybind 代码。
+- Python 如何调用自定义 CUDA extension。
+- correctness 和 timing 输出怎么看。
+- 修改 CUDA 代码后如何重新运行。
 
-Completion check:
+完成标准：
 
-- Student can run one existing kernel.
-- Student can identify where the CUDA kernel, Python wrapper, and test data are defined.
+- 学生能跑通一个已有 kernel。
+- 学生能指出 CUDA kernel、Python wrapper、测试数据分别在哪里。
 
-## Stage 1: Elementwise Kernels
+## 阶段 1：Elementwise Kernels
 
-Goal: learn the CUDA execution model and simple memory access.
+目标：学习 CUDA 执行模型和最简单的全局内存访问。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/elementwise](../kernels/elementwise)
 2. [../kernels/relu](../kernels/relu)
@@ -62,179 +62,179 @@ Study in this order:
 7. [../kernels/hardswish](../kernels/hardswish)
 8. [../kernels/hardshrink](../kernels/hardshrink)
 
-Must understand:
+必须理解：
 
-- `blockIdx`, `threadIdx`, `blockDim`, `gridDim`.
-- One thread per element.
-- Boundary checks.
-- `float`, `half`, `half2`.
-- Vectorized load/store such as `float4` and packed `half`.
-- Why memory bandwidth matters for elementwise kernels.
+- `blockIdx`、`threadIdx`、`blockDim`、`gridDim`。
+- 一个 thread 处理一个元素的基本模式。
+- 边界检查。
+- `float`、`half`、`half2`。
+- `float4` 和 packed `half` 这类向量化 load/store。
+- 为什么 elementwise kernel 通常受 memory bandwidth 限制。
 
-Hands-on tasks:
+动手任务：
 
-- Change elementwise add into multiply.
-- Add a scalar affine kernel: `y = alpha * x + beta`.
-- Compare scalar, `x2`, `x4`, and packed versions.
+- 把 elementwise add 改成 multiply。
+- 新增一个 scalar affine kernel：`y = alpha * x + beta`。
+- 对比 scalar、`x2`、`x4`、packed 版本。
 
-Completion check:
+完成标准：
 
-- Student can write a simple elementwise kernel without copying an existing implementation.
-- Student can explain why a vectorized version can be faster.
+- 学生能不照抄现有代码，写出一个简单 elementwise kernel。
+- 学生能解释为什么向量化版本可能更快。
 
-## Stage 2: Memory Layout And Data Movement
+## 阶段 2：内存布局与数据搬运
 
-Goal: understand contiguous access, coalescing, transpose, and shared memory motivation.
+目标：理解连续访问、coalescing、transpose，以及为什么 shared memory 有价值。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/embedding](../kernels/embedding)
 2. [../kernels/mat-transpose](../kernels/mat-transpose)
 3. [../kernels/histogram](../kernels/histogram)
 
-Must understand:
+必须理解：
 
-- Row-major tensor layout.
-- Coalesced vs non-coalesced global memory access.
-- Alignment requirements for vectorized load/store.
-- Why transpose is memory-bound and easy to make inefficient.
-- When atomics are needed, using histogram as the entry point.
+- Row-major tensor layout。
+- Coalesced 与 non-coalesced global memory access。
+- 向量化 load/store 的对齐要求。
+- 为什么 transpose 是 memory-bound，且容易写低效。
+- 什么时候需要 atomic，可从 histogram 入门。
 
-Hands-on tasks:
+动手任务：
 
-- Draw the mapping from a 2D matrix index to linear memory.
-- Modify matrix sizes and observe timing.
-- Add comments to one transpose kernel explaining read and write patterns.
+- 画出二维矩阵索引到线性内存地址的映射。
+- 修改矩阵大小并观察 timing。
+- 给一个 transpose kernel 添加注释，说明读写访问模式。
 
-Completion check:
+完成标准：
 
-- Student can predict which memory access is contiguous.
-- Student can explain why transpose needs more care than elementwise add.
+- 学生能判断哪一类访问是连续的。
+- 学生能解释 transpose 为什么比 elementwise add 更麻烦。
 
-## Stage 3: Warp And Block Reduction
+## 阶段 3：Warp 与 Block Reduction
 
-Goal: learn the core pattern behind dot product, softmax, layer norm, and attention.
+目标：掌握 dot product、softmax、layer norm、attention 背后的核心并行模式。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/reduce](../kernels/reduce)
 2. [../kernels/dot-product](../kernels/dot-product)
 
-Must understand:
+必须理解：
 
-- Warp-level reduction.
-- Block-level reduction.
-- `__shfl_down_sync`.
-- Shared memory reduction.
-- Accumulation dtype: fp16 input with fp32 accumulate.
-- Packed reductions for fp16, bf16, fp8, and int8 variants.
+- Warp-level reduction。
+- Block-level reduction。
+- `__shfl_down_sync`。
+- Shared memory reduction。
+- Accumulation dtype：fp16 输入配 fp32 accumulate。
+- fp16、bf16、fp8、int8 的 packed reduction 变体。
 
-Hands-on tasks:
+动手任务：
 
-- Reimplement a simple fp32 sum reduction.
-- Change block size and record performance.
-- Compare fp16 accumulation vs fp32 accumulation for accuracy.
+- 重新实现一个简单 fp32 sum reduction。
+- 修改 block size 并记录性能。
+- 对比 fp16 accumulate 与 fp32 accumulate 的精度差异。
 
-Completion check:
+完成标准：
 
-- Student can explain a tree reduction.
-- Student can trace how one block produces one reduced value.
+- 学生能解释 tree reduction。
+- 学生能追踪一个 block 如何产生一个 reduced value。
 
-## Stage 4: Softmax, Online Softmax, And Normalization
+## 阶段 4：Softmax、Online Softmax 与 Normalization
 
-Goal: combine reductions with numerically stable formulas used in deep learning.
+目标：把 reduction 与深度学习中常见的数值稳定公式结合起来。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/softmax](../kernels/softmax)
 2. [../kernels/layer-norm](../kernels/layer-norm)
 3. [../kernels/rms-norm](../kernels/rms-norm)
 4. [../kernels/rope](../kernels/rope)
 
-Must understand:
+必须理解：
 
-- Safe softmax: subtract row max.
-- Online softmax: update max and denominator incrementally.
-- Per-token kernel structure.
-- Mean, variance, and `rsqrt`.
-- RMSNorm vs LayerNorm.
-- Why fp32 accumulation is usually used even when input is fp16.
+- Safe softmax：先减 row max。
+- Online softmax：增量更新 max 和 denominator。
+- Per-token kernel 结构。
+- Mean、variance、`rsqrt`。
+- RMSNorm 与 LayerNorm 的差别。
+- 为什么输入是 fp16 时通常仍使用 fp32 accumulation。
 
-Hands-on tasks:
+动手任务：
 
-- For one row of softmax, manually compute max, denominator, and output.
-- Explain the two reductions used by LayerNorm.
-- Compare PyTorch output and custom kernel output, including max absolute error.
+- 手算一行 softmax 的 max、denominator 和输出。
+- 解释 LayerNorm 中的两次 reduction。
+- 对比 PyTorch 输出与自定义 kernel 输出，包括最大绝对误差。
 
-Completion check:
+完成标准：
 
-- Student can derive safe softmax.
-- Student can identify reduction phases in norm kernels.
+- 学生能推导 safe softmax。
+- 学生能指出 norm kernel 中的 reduction 阶段。
 
-## Stage 5: GEMV
+## 阶段 5：GEMV
 
-Goal: bridge simple reductions and matrix multiplication.
+目标：从简单 reduction 过渡到矩阵乘。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/sgemv](../kernels/sgemv)
 2. [../kernels/hgemv](../kernels/hgemv)
-3. [../kernels/hgemv/hgemv_cute.cu](../kernels/hgemv/hgemv_cute.cu), only after the basic versions are clear.
+3. [../kernels/hgemv/hgemv_cute.cu](../kernels/hgemv/hgemv_cute.cu)，等基础版本理解清楚后再看。
 
-Must understand:
+必须理解：
 
-- How one row or tile maps to one block.
-- K dimension splitting.
-- Dot product as the inner loop of GEMV.
-- fp16 load with fp16 or fp32 accumulation.
-- Why GEMV can be memory-bound.
+- 一行或一个 tile 如何映射到一个 block。
+- K 维如何拆分。
+- GEMV 的内层就是 dot product。
+- fp16 load 搭配 fp16 或 fp32 accumulation。
+- 为什么 GEMV 常常是 memory-bound。
 
-Hands-on tasks:
+动手任务：
 
-- Draw the mapping from matrix row and vector column to threads.
-- Compare `k16`, `k32`, and `k128` variants.
-- Add a small shape case and verify output.
+- 画出 matrix row、vector column 到 threads 的映射。
+- 对比 `k16`、`k32`、`k128` 变体。
+- 添加一个小 shape 并验证输出。
 
-Completion check:
+完成标准：
 
-- Student can explain how a vector is reused across rows.
-- Student can connect dot product to GEMV.
+- 学生能解释 vector 如何跨多行复用。
+- 学生能把 dot product 与 GEMV 联系起来。
 
-## Stage 6: CUDA Core GEMM
+## 阶段 6：CUDA Core GEMM
 
-Goal: understand tiling before entering Tensor Core implementations.
+目标：在进入 Tensor Core 前，先理解 tiling。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/sgemm](../kernels/sgemm)
 2. [../kernels/hgemm/naive](../kernels/hgemm/naive)
 
-Must understand:
+必须理解：
 
-- Naive GEMM.
-- C tile ownership by a block.
-- Thread tile, such as `8x8`.
-- Shared memory tile.
-- Loop over K.
-- Double buffering.
-- Async copy, after the synchronous version is clear.
+- Naive GEMM。
+- 一个 block 负责 C 的一个 tile。
+- Thread tile，例如 `8x8`。
+- Shared memory tile。
+- 沿 K 维循环。
+- Double buffering。
+- 在同步版本理解清楚后，再理解 async copy。
 
-Hands-on tasks:
+动手任务：
 
-- Start from naive GEMM and identify repeated global memory loads.
-- Explain what data is stored in shared memory.
-- Compare versions from naive to tiled to double-buffered.
+- 从 naive GEMM 开始，找出重复 global memory load。
+- 解释 shared memory 里存了什么数据。
+- 对比 naive、tiled、double-buffered 版本。
 
-Completion check:
+完成标准：
 
-- Student can draw block tile, thread tile, and K loop.
-- Student can explain why tiled GEMM improves data reuse.
+- 学生能画出 block tile、thread tile 和 K loop。
+- 学生能解释 tiled GEMM 如何提高数据复用。
 
-## Stage 7: Tensor Core HGEMM
+## 阶段 7：Tensor Core HGEMM
 
-Goal: learn WMMA, MMA PTX, shared-memory swizzle, and performance-oriented GEMM.
+目标：学习 WMMA、MMA PTX、shared memory swizzle 和面向性能的 GEMM。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/hgemm/README.md](../kernels/hgemm/README.md)
 2. [../kernels/hgemm/wmma/hgemm_wmma.cu](../kernels/hgemm/wmma/hgemm_wmma.cu)
@@ -245,34 +245,34 @@ Study in this order:
 7. [../kernels/hgemm/cutlass/hgemm_mma_stage_tn_cute.cu](../kernels/hgemm/cutlass/hgemm_mma_stage_tn_cute.cu)
 8. [../HGEMM/README.md](../HGEMM/README.md)
 
-Must understand:
+必须理解：
 
-- What Tensor Cores accelerate.
-- WMMA API vs MMA PTX.
-- MMA atom shape, such as `m16n8k16`.
-- Warp tile and block tile.
-- Shared memory padding and swizzle.
-- Multi-stage pipeline.
-- Block swizzle and L2 locality.
-- cuBLAS comparison methodology.
+- Tensor Core 加速什么。
+- WMMA API 与 MMA PTX 的区别。
+- MMA atom shape，例如 `m16n8k16`。
+- Warp tile 与 block tile。
+- Shared memory padding 与 swizzle。
+- Multi-stage pipeline。
+- Block swizzle 与 L2 locality。
+- 与 cuBLAS 做对比的方法。
 
-Hands-on tasks:
+动手任务：
 
-- Run a default WMMA benchmark.
-- Run a default MMA benchmark.
-- Pick one shape and compare cuBLAS, WMMA, MMA, and CuTe versions if the environment supports it.
-- Draw the hierarchy: block tile -> warp tile -> MMA tile.
+- 运行一个默认 WMMA benchmark。
+- 运行一个默认 MMA benchmark。
+- 如果环境支持，选一个 shape 对比 cuBLAS、WMMA、MMA、CuTe。
+- 画出层次结构：block tile -> warp tile -> MMA tile。
 
-Completion check:
+完成标准：
 
-- Student can explain what each warp computes.
-- Student can explain why MMA PTX can outperform a simple WMMA implementation.
+- 学生能解释每个 warp 计算什么。
+- 学生能解释 MMA PTX 为什么可能优于简单 WMMA 实现。
 
-## Stage 8: FlashAttention And Attention Kernels
+## 阶段 8：FlashAttention 与 Attention Kernels
 
-Goal: understand how GEMM, softmax, and tiling combine in attention.
+目标：理解 GEMM、softmax、tiling 如何组合成 attention。
 
-Study in this order:
+学习顺序：
 
 1. [../kernels/flash-attn/README.md](../kernels/flash-attn/README.md)
 2. [../kernels/flash-attn/cutlass/flash_attn_cute.cu](../kernels/flash-attn/cutlass/flash_attn_cute.cu)
@@ -283,117 +283,116 @@ Study in this order:
 7. [../kernels/flash-attn/mma/basic/flash_attn_mma_tiling_qk.cu](../kernels/flash-attn/mma/basic/flash_attn_mma_tiling_qk.cu)
 8. [../kernels/flash-attn/mma/basic/flash_attn_mma_tiling_qkv.cu](../kernels/flash-attn/mma/basic/flash_attn_mma_tiling_qkv.cu)
 
-Must understand:
+必须理解：
 
-- Standard attention: `softmax(QK^T / sqrt(d)) V`.
-- Why materializing the full attention matrix is expensive.
-- Online softmax inside tiled attention.
-- Split-KV vs split-Q.
-- Shared KV and shared QKV memory reuse.
-- Fine-grained QK and QKV tiling.
-- Accuracy checks against PyTorch SDPA or FlashAttention reference.
+- 标准 attention：`softmax(QK^T / sqrt(d)) V`。
+- 为什么不能轻易 materialize 完整 attention matrix。
+- Tiled attention 中的 online softmax。
+- Split-KV 与 Split-Q。
+- Shared KV 与 shared QKV 的内存复用。
+- 细粒度 QK 和 QKV tiling。
+- 如何与 PyTorch SDPA 或 FlashAttention reference 做精度检查。
 
-Hands-on tasks:
+动手任务：
 
-- Explain one attention kernel with shapes `(B, H, N, D)`.
-- Identify where Q, K, V, and O are loaded and stored.
-- Trace one block over a Q tile and K/V tiles.
+- 用形状 `(B, H, N, D)` 解释一个 attention kernel。
+- 找到 Q、K、V、O 的 load/store 位置。
+- 追踪一个 block 如何遍历一个 Q tile 和多个 K/V tile。
 
-Completion check:
+完成标准：
 
-- Student can explain FlashAttention as tiled GEMM + online softmax + value accumulation.
-- Student can distinguish memory-saving design from compute optimization.
+- 学生能把 FlashAttention 解释为 tiled GEMM + online softmax + value accumulation。
+- 学生能区分节省内存的设计和提升计算效率的设计。
 
-## Stage 9: FFPA And Large Head Dimension Attention
+## 阶段 9：FFPA 与大 Head Dimension Attention
 
-Goal: study an advanced attention implementation after the FlashAttention basics are clear.
+目标：在理解 FlashAttention 基础后，学习更高级的 attention 实现。
 
-Study:
+学习：
 
 - [../ffpa-attn/README.md](../ffpa-attn/README.md)
 - [../ffpa-attn/examples/run_ffpa_attn.py](../ffpa-attn/examples/run_ffpa_attn.py)
 
-Must understand:
+必须理解：
 
-- Why standard FlashAttention-2 is limited for large head dimensions.
-- What Split-D means in this project.
-- O(1) SRAM complexity claim at a high level.
-- Self-attention, cross-attention, GQA/MQA, and causal mode.
+- 为什么标准 FlashAttention-2 对 large head dimension 有限制。
+- 本项目中的 Split-D 是什么。
+- O(1) SRAM complexity 的高层含义。
+- Self-attention、cross-attention、GQA/MQA、causal mode。
 
-Hands-on tasks:
+动手任务：
 
-- Run the example if the local CUDA/PyTorch versions satisfy the requirements.
-- Compare FFPA output with PyTorch SDPA.
-- Record shape, dtype, GPU, runtime, and error.
+- 如果本地 CUDA/PyTorch 版本满足要求，运行 example。
+- 对比 FFPA 输出与 PyTorch SDPA。
+- 记录 shape、dtype、GPU、runtime 和 error。
 
-Completion check:
+完成标准：
 
-- Student can explain what problem FFPA targets.
-- Student can identify when FFPA is relevant and when normal FlashAttention is enough.
+- 学生能解释 FFPA 解决什么问题。
+- 学生能判断何时使用 FFPA，何时普通 FlashAttention 已足够。
 
-## Optional Track: Triton And CUTLASS
+## 可选路线：Triton 与 CUTLASS
 
-Use this track after the CUDA C++ basics are stable.
+当 CUDA C++ 基础稳定后再学习这一部分。
 
-Study:
+学习：
 
 - [../kernels/openai-triton](../kernels/openai-triton)
 - [../kernels/cutlass](../kernels/cutlass)
 - [../third-party/cutlass/media/docs/cpp/quickstart.md](../third-party/cutlass/media/docs/cpp/quickstart.md)
 - [../third-party/cutlass/media/docs/cpp/cute/00_quickstart.md](../third-party/cutlass/media/docs/cpp/cute/00_quickstart.md)
 
-Purpose:
+用途：
 
-- Triton helps express kernels faster in Python.
-- CUTLASS/CuTe helps understand production-grade Tensor Core tiling abstractions.
+- Triton 能帮助用 Python 更快表达 kernel。
+- CUTLASS/CuTe 能帮助理解生产级 Tensor Core tiling 抽象。
 
-## Suggested Milestones
+## 推荐里程碑
 
-Milestone 1:
+里程碑 1：
 
-- Can run one elementwise kernel.
-- Can edit and rerun it.
+- 能跑通一个 elementwise kernel。
+- 能修改并重新运行它。
 
-Milestone 2:
+里程碑 2：
 
-- Can explain warp/block reduction.
-- Can write a simple sum reduction.
+- 能解释 warp/block reduction。
+- 能写一个简单 sum reduction。
 
-Milestone 3:
+里程碑 3：
 
-- Can explain softmax and layer norm kernels.
-- Can reason about fp32 accumulation.
+- 能解释 softmax 和 layer norm kernels。
+- 能说明为什么要关注 fp32 accumulation。
 
-Milestone 4:
+里程碑 4：
 
-- Can explain tiled SGEMM.
-- Can draw block tile, warp/thread work, and K loop.
+- 能解释 tiled SGEMM。
+- 能画出 block tile、warp/thread 工作和 K loop。
 
-Milestone 5:
+里程碑 5：
 
-- Can run and explain a WMMA HGEMM kernel.
+- 能运行并解释一个 WMMA HGEMM kernel。
 
-Milestone 6:
+里程碑 6：
 
-- Can explain an MMA PTX HGEMM kernel and its tiling hierarchy.
+- 能解释一个 MMA PTX HGEMM kernel 及其 tiling 层级。
 
-Milestone 7:
+里程碑 7：
 
-- Can explain FlashAttention as a fusion of tiled QK, online softmax, and PV.
+- 能把 FlashAttention 解释为 tiled QK、online softmax 与 PV 的融合。
 
-Milestone 8:
+里程碑 8：
 
-- Can investigate FFPA or another advanced kernel with the project docs and learning history.
+- 能结合项目文档和学习历史，独立调查 FFPA 或其他高级 kernel。
 
-## Recording Rules
+## 记录规则
 
-After every session, update [Learning History](./learning-history.md) with:
+每次学习 session 结束后，更新 [学习历史记录](./learning-history.md)，至少写入：
 
-- Date and environment.
-- Topic and files studied.
-- Commands run.
-- Whether the run passed.
-- What the student understood.
-- What remains confusing.
-- Next recommended step.
-
+- 日期与环境。
+- 学习主题和读过的文件。
+- 运行过的命令。
+- 是否跑通。
+- 学生已经理解的内容。
+- 仍然困惑的问题。
+- 下一步推荐动作。
